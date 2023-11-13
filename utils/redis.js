@@ -5,7 +5,10 @@ class RedisClient {
   // new class to create a new client
   constructor() {
     // creating a new client
-    this.client = redis.createClient();
+    this.client = redis.createClient({
+      host: '127.0.0.1',
+      port: 6379,
+    });
 
     // handling errors
     this.client.on('error', (error) => {
@@ -57,4 +60,4 @@ class RedisClient {
 
 const redisClient = new RedisClient();
 
-module.export = redisClient;
+module.exports = redisClient;
