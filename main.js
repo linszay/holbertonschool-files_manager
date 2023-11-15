@@ -1,12 +1,37 @@
-import redisClient from './utils/redis';
+// mongodb initialization
+const { MongoClient } = require('mongodb');
 
-(async () => {
-  console.log(redisClient.isAlive());
-  console.log(await redisClient.get('myKey'));
-  await redisClient.set('myKey', 12, 5);
-  console.log(await redisClient.get('myKey'));
+//  mongodb class
+class DBClient {
+  constructor() {
+    const host = process.env.DB_HOST || 'localhost';
+    const port = process.env.DB_PORT || 27017;
+    const database = process.env.DB_DATABASE || 'files_manager';
+    this.url = `mongodb://${host}:${port}/${database}`;
+    this.client = new MongoClient(this.url, { useUnifiedTopology: true });
+    this.client.connect();
+  }
 
-  setTimeout(async () => {
-    console.log(await redisClient.get('myKey'));
-  }, 1000 * 10);
-})();
+  // checks the active db connection
+  isAlive() {
+    return this.client.isConnected();
+  }
+
+  // returns number of docs in collection users
+  async nbUsers() {
+    const db = this.client.db();
+    const collection = db.collection('users');
+    return collection.countDocuments();
+  }
+
+  // returns number of docs in collection files
+  async nbFiles() {
+    const db = this.client.db();
+    const collection = db.collection('files');
+    return collection.countDocuments();
+  }
+}
+
+// create and export instance of DBClient
+const dbClient = new DBClient();
+module.exports = dbClient;
