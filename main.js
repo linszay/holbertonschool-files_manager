@@ -1,37 +1,30 @@
-// mongodb initialization
-const { MongoClient } = require('mongodb');
+import dbClient from './utils/db';
 
-//  mongodb class
-class DBClient {
-  constructor() {
-    const host = process.env.DB_HOST || 'localhost';
-    const port = process.env.DB_PORT || 27017;
-    const database = process.env.DB_DATABASE || 'files_manager';
-    this.url = `mongodb://${host}:${port}/${database}`;
-    this.client = new MongoClient(this.url, { useUnifiedTopology: true });
-    this.client.connect();
-  }
+const waitConnection = () => {
+    return new Promise((resolve, reject) => {
+        let i = 0;
+        const repeatFct = async () => {
+            await setTimeout(() => {
+                i += 1;
+                if (i >= 10) {
+                    reject()
+                }
+                else if(!dbClient.isAlive()) {
+                    repeatFct()
+                }
+                else {
+                    resolve()
+                }
+            }, 1000);
+        };
+        repeatFct();
+    })
+};
 
-  // checks the active db connection
-  isAlive() {
-    return this.client.isConnected();
-  }
-
-  // returns number of docs in collection users
-  async nbUsers() {
-    const db = this.client.db();
-    const collection = db.collection('users');
-    return collection.countDocuments();
-  }
-
-  // returns number of docs in collection files
-  async nbFiles() {
-    const db = this.client.db();
-    const collection = db.collection('files');
-    return collection.countDocuments();
-  }
-}
-
-// create and export instance of DBClient
-const dbClient = new DBClient();
-module.exports = dbClient;
+(async () => {
+    console.log(dbClient.isAlive());
+    await waitConnection();
+    console.log(dbClient.isAlive());
+    console.log(await dbClient.nbUsers());
+    console.log(await dbClient.nbFiles());
+})();

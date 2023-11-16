@@ -31,4 +31,3 @@ class DBClient {
       return collection.countDocuments();
     }
   }
-  
