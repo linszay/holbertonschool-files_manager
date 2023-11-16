@@ -31,3 +31,7 @@ class DBClient {
       return collection.countDocuments();
     }
   }
+
+// create and export instance of DBClient
+const dbClient = new DBClient();
+module.exports = dbClient;
