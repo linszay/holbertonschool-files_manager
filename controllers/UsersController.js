@@ -1,7 +1,7 @@
 // controllers/UsersController.js
 
 const { hash } = require('crypto');
-const dbClient = require('../db');
+const dbClient = require('../utils/db');
 
 const UsersController = {
   postNew: async (req, res) => {
