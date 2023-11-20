@@ -1,6 +1,7 @@
 // controllers/UsersController.js
+
 const { hash } = require('crypto');
-const UserModel = require('../models/UserModel');
+const dbClient = require('../db');
 
 const UsersController = {
   postNew: async (req, res) => {
@@ -16,8 +17,12 @@ const UsersController = {
     }
 
     try {
-      // check if the email already exists in db
-      const existingUser = await UserModel.findOne({ email });
+      // check if email already exists in db
+      const existingUser = await dbClient
+        .client
+        .db()
+        .collection('users')
+        .findOne({ email });
 
       if (existingUser) {
         return res.status(400).json({ error: 'Already exist' });
@@ -27,13 +32,17 @@ const UsersController = {
       const hashedPassword = hash('sha1').update(password).digest('hex');
 
       // create new user
-      const newUser = new UserModel({
+      const newUser = {
         email,
         password: hashedPassword,
-      });
+      };
 
       // save user to db
-      await newUser.save();
+      await dbClient
+        .client
+        .db()
+        .collection('users')
+        .insertOne(newUser);
 
       // return new user with only email and id
       return res.status(201).json({ id: newUser._id, email: newUser.email });
