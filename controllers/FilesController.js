@@ -5,7 +5,7 @@ import redisClient from '../utils/redis';
 import dbClient from '../utils/db';
 import mimeTypes from 'mime-types';
 import { createQueue, addJob } from '../utils/queue';
-import imageThumbnail from 'image-thumbnail';
+import sharp from 'sharp';
 
 const fileQueue = createQueue('fileQueue');
 const FOLDER_PATH = process.env.FOLDER_PATH || '/tmp/files_manager';
@@ -98,21 +98,17 @@ const FilesController = {
       const size = req.query.size;
       if (size) {
         const thumbnailPath = path.join(FOLDER_PATH, `${id}_${size}`);
-        try {
-          await fs.access(thumbnailPath);
-          const thumbnailContent = await fs.readFile(thumbnailPath);
-          res.status(200).send(thumbnailContent);
-          return;
-        } catch (error) {
-          // Thumbnail not found, continue to fetch the original file
-        }
+        await sharp(localPath).resize(Number(size)).toFile(thumbnailPath);
+        const thumbnailContent = await fs.readFile(thumbnailPath);
+        res.status(200).send(thumbnailContent);
+        return;
       }
 
       // Get the MIME-type based on the name of the file
       const mimeType = mimeTypes.lookup(name) || 'application/octet-stream';
 
       // Return the content of the file with the correct MIME-type
-      const fileContent = await fs.readFile(localPath, { encoding: 'utf-8' });
+      const fileContent = await fs.promises.readFile(localPath, { encoding: 'utf-8' });
       res.setHeader('Content-Type', mimeType);
       res.status(200).send(fileContent);
     } catch (error) {
@@ -139,4 +135,3 @@ const FilesController = {
 };
 
 export default FilesController;
-
