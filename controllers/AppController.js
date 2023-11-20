@@ -1,26 +1,26 @@
-const { checkRedisStatus, checkDBStatus, countUsers, countFiles } = require('../utils');
+// controllers/AppController.js
+import { isAlive as isRedisAlive } from '../utils/redis';
+import { isAlive as isDbAlive, countUsers, countFiles } from '../utils/db';
 
 const AppController = {
-  getStatus: async (req, res) => {
+  async getStatus(req, res) {
     try {
-      const redisStatus = await checkRedisStatus();
-      const dbStatus = await checkDBStatus();
-
+      const redisStatus = await isRedisAlive();
+      const dbStatus = await isDbAlive();
       res.status(200).json({ redis: redisStatus, db: dbStatus });
     } catch (error) {
-      console.error(error);
+      console.error(`Error in getStatus: ${error}`);
       res.status(500).json({ error: 'Internal Server Error' });
     }
   },
 
-  getStats: async (req, res) => {
+  async getStats(req, res) {
     try {
-      const userCount = await countUsers();
-      const fileCount = await countFiles();
-
-      res.status(200).json({ users: userCount, files: fileCount });
+      const usersCount = await countUsers();
+      const filesCount = await countFiles();
+      res.status(200).json({ users: usersCount, files: filesCount });
     } catch (error) {
-      console.error(error);
+      console.error(`Error in getStats: ${error}`);
       res.status(500).json({ error: 'Internal Server Error' });
     }
   },

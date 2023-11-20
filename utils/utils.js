@@ -1,5 +1,7 @@
+const { RedisClient } = require('redis');
 
 const checkRedisStatus = async () => {
+  await RedisClient.isAlive();
   // Implement logic to check Redis status
   // Return true if Redis is alive, false otherwise
 };
