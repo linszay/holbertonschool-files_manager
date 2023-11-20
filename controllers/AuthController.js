@@ -67,6 +67,17 @@ const AuthController = {
         return res.status(401).json({ error: 'Unauthorized' });
       }
 
+      // checking to ensure the user associated with the token exists
+      const user = await dbClient
+        .client
+        .db()
+        .collection('users')
+        .findOne({ _id: userId });
+
+      if (!user) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
       // delete the token in Redis
       await redisClient.del(`auth_${token}`);
 
