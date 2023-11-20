@@ -1,7 +1,7 @@
 // controllers/UsersController.js
 
-const bcrypt = require('bcrypt');
-import { User } from '../models';
+const { hash } = require('crypto');
+const dbClient = require('../utils/db');
 
 const UsersController = {
   postNew: async (req, res) => {
