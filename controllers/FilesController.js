@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs/promises';
 import path from 'path';
-import redisClient from '../utils/redis';
+// import redisClient from '../utils/redis.';
 import dbClient from '../utils/db';
 import mimeTypes from 'mime-types';
 import { createQueue, addJob } from '../utils/queue';
