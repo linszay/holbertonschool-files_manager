@@ -1,0 +1,77 @@
+// controllers/AuthController.js
+const sha1 = require('sha1');
+const dbClient = require('../utils/db');
+const { v4: uuidv4 } = require('uuid');
+const redisClient = require('../utils/redis');
+
+const AuthController = {
+  getConnect: async (req, res) => {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith('Basic ')) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const authCredentials = Buffer.from(authHeader.slice('Basic '.length), 'base64').toString('utf-8');
+    const [email, password] = authCredentials.split(':');
+
+    if (!email || !password) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    try {
+      // check if user exists and password matches
+      const hashedPassword = sha1(password);
+      const user = await dbClient
+        .client
+        .db()
+        .collection('users')
+        .findOne({ email, password: hashedPassword });
+
+      if (!user) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      // generate random token
+      const token = uuidv4();
+
+      // create key for Redis
+      const key = `auth_${token}`;
+
+      // store user ID in Redis for 24 hours MAX
+      await redisClient.set(key, user._id.toString(), 'EX', 24 * 60 * 60);
+
+      return res.status(200).json({ token });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ error: 'Internal Server Error' });
+    }
+  },
+
+  getDisconnect: async (req, res) => {
+    const { 'x-token': token } = req.headers;
+
+    if (!token) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    try {
+      // retrieve user based on token
+      const userId = await redisClient.get(`auth_${token}`);
+
+      if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      // delete the token in Redis
+      await redisClient.del(`auth_${token}`);
+
+      return res.status(204).send();
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ error: 'Internal Server Error' });
+    }
+  },
+};
+
+export default AuthController;
