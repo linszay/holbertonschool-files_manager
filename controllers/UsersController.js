@@ -1,6 +1,5 @@
 // controllers/UsersController.js
 const sha1 = require('sha1');
-const { hash } = require('crypto');
 const dbClient = require('../utils/db');
 
 const UsersController = {
