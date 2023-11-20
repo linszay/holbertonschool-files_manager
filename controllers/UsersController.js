@@ -77,6 +77,10 @@ const UsersController = {
         return res.status(401).json({ error: 'Unauthorized' });
       }
 
+      if (user._id.toString() !== userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
       // return user object with email and id only
       return res.status(200).json({ id: user._id, email: user.email });
     } catch (error) {

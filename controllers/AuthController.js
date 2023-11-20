@@ -1,7 +1,7 @@
 // controllers/AuthController.js
 const sha1 = require('sha1');
-const dbClient = require('../utils/db');
 const { v4: uuidv4 } = require('uuid');
+const dbClient = require('../utils/db');
 const redisClient = require('../utils/redis');
 
 const AuthController = {
@@ -60,14 +60,14 @@ const AuthController = {
     }
 
     try {
-      // retrieve user based on token
+      // retrieve user based on token from Redis
       const userId = await redisClient.get(`auth_${token}`);
 
       if (!userId) {
         return res.status(401).json({ error: 'Unauthorized' });
       }
 
-      // checking to ensure the user associated with the token exists
+      // check if the user exists in the database
       const user = await dbClient
         .client
         .db()
@@ -75,10 +75,6 @@ const AuthController = {
         .findOne({ _id: userId });
 
       if (!user) {
-        return res.status(401).json({ error: 'Unauthorized' });
-      }
-
-      if (token !== user.token) {
         return res.status(401).json({ error: 'Unauthorized' });
       }
 
