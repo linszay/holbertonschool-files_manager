@@ -1,7 +1,7 @@
 // controllers/UsersController.js
-import sha1 from 'sha1';
-import redisClient from '../utils/redis';
-import dbClient from '../utils/db';
+const sha1 = require('sha1');
+const redisClient = require('../utils/redis');
+const dbClient = require('../utils/db');
 
 const UsersController = {
   postNew: async (req, res) => {
@@ -16,21 +16,7 @@ const UsersController = {
       return res.status(400).json({ error: 'Missing password' });
     }
 
-    // check if x-token header is present
-    const token = req.headers['x-token'];
-
-    if (!token) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
     try {
-      // check if the user is authenticated based on the token
-      const userId = await redisClient.get(`auth_${token}`);
-
-      if (!userId) {
-        return res.status(401).json({ error: 'Unauthorized' });
-      }
-
       // check if email already exists in db
       const existingUser = await dbClient
         .client
@@ -42,24 +28,57 @@ const UsersController = {
         return res.status(400).json({ error: 'Already exist' });
       }
 
-      // hash the password using SHA1
+      // hashing the password using SHA1
       const hashedPassword = sha1(password);
 
-      // create a new user
+      // create new user
       const newUser = {
         email,
         password: hashedPassword,
       };
 
-      // save the user to the db
+      // save user to db
       const result = await dbClient
         .client
         .db()
         .collection('users')
         .insertOne(newUser);
 
-      // return the new user with only email and id
+      // return new user with only email and id
       return res.status(201).json({ id: result.insertedId, email: newUser.email });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ error: 'Internal Server Error' });
+    }
+  },
+  getMe: async (req, res) => {
+    const { 'x-token': token } = req.headers;
+
+    if (!token) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    try {
+      // retrieve user based on token
+      const userId = await redisClient.get(`auth_${token}`);
+
+      if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      // retrieve user details from MongoDB
+      const user = await dbClient
+        .client
+        .db()
+        .collection('users')
+        .findOne({ _id: userId });
+
+      if (!user) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      // return user object with email and id only
+      return res.status(200).json({ id: user._id, email: user.email });
     } catch (error) {
       console.error(error);
       return res.status(500).json({ error: 'Internal Server Error' });
