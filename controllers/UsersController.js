@@ -29,7 +29,7 @@ const UsersController = {
       }
 
       // hashing the password using SHA1
-      const hashedPassword = hash('sha1').update(password).digest('hex');
+      const hashedPassword = hash('sha1').update(password).digest('hex').toUpperCase();
 
       // create new user
       const newUser = {
@@ -38,14 +38,14 @@ const UsersController = {
       };
 
       // save user to db
-      await dbClient
+      const result = await dbClient
         .client
         .db()
         .collection('users')
         .insertOne(newUser);
 
       // return new user with only email and id
-      return res.status(201).json({ id: newUser._id, email: newUser.email });
+      return res.status(201).json({ id: result.insertedId, email: newUser.email });
     } catch (error) {
       console.error(error);
       return res.status(500).json({ error: 'Internal Server Error' });
