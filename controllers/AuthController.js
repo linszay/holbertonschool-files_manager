@@ -39,7 +39,11 @@ const AuthController = {
       const key = `auth_${token}`;
 
       // store user ID in Redis for 24 hours MAX
-      await redisClient.set(key, user._id.toString(), 'EX', 24 * 60 * 60);
+      await redisClient.set(key, user._id.toString(), 86400)
+        .catch((err) => {
+          console.error(err);
+          throw new Error('Redis set error');
+        });
 
       return res.status(200).json({ token });
     } catch (error) {
