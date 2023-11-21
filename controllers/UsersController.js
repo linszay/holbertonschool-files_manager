@@ -1,5 +1,6 @@
 // controllers/UsersController.js
 const sha1 = require('sha1');
+const { ObjectID } = require('mongodb');
 const redisClient = require('../utils/redis');
 const dbClient = require('../utils/db');
 
@@ -60,18 +61,16 @@ const UsersController = {
 
     try {
       // retrieve user based on token
-      const userId = await redisClient.get(`auth_${token}`);
+      const userIdString = await redisClient.get(`auth_${token}`);
 
-      if (!userId) {
+      if (!userIdString) {
         return res.status(401).json({ error: 'Unauthorized' });
       }
 
+      const userId = new ObjectID(userIdString);
+
       // retrieve user details from MongoDB
-      const user = await dbClient
-        .client
-        .db()
-        .collection('users')
-        .findOne({ _id: userId });
+      const user = await dbClient.users.findOne({ _id: userId });
 
       if (!user) {
         return res.status(401).json({ error: 'Unauthorized' });
@@ -82,7 +81,7 @@ const UsersController = {
       }
 
       // return user object with email and id only
-      return res.status(200).json({ id: user._id, email: user.email });
+      return res.status(200).json({ id: user._id.toString(), email: user.email });
     } catch (error) {
       console.error(error);
       return res.status(500).json({ error: 'Internal Server Error' });

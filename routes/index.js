@@ -15,5 +15,5 @@ router.get('/connect', AuthController.getConnect);
 router.get('/disconnect', AuthController.getDisconnect);
 router.post('/files', FilesController.postUpload); // Updated route
 
-module.exports = router;
+export default router;
 
