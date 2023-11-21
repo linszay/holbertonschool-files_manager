@@ -22,30 +22,19 @@ const AuthController = {
     try {
       // check if user exists and password matches
       const hashedPassword = sha1(password);
-      const user = await dbClient
-        .client
-        .db()
-        .collection('users')
-        .findOne({ email, password: hashedPassword });
-
-      if (!user) {
-        return res.status(401).json({ error: 'Unauthorized' });
+      const user = await dbClient.users.findOne({ email });
+      if (user && user.password === hashedPassword) {
+        try {
+          const token = uuidv4();
+          const key = `auth_${token}`;
+          await redisClient.set(key, user._id.toString(), 86400);
+          return res.status(200).json({ token });
+        } catch (error) {
+          console.error(error);
+          return res.status(500).json({ error: 'Internal Server Error' });
+        }
       }
-
-      // generate random token
-      const token = uuidv4();
-
-      // create key for Redis
-      const key = `auth_${token}`;
-
-      // store user ID in Redis for 24 hours MAX
-      await redisClient.set(key, user._id.toString(), 86400)
-        .catch((err) => {
-          console.error(err);
-          throw new Error('Redis set error');
-        });
-
-      return res.status(200).json({ token });
+      return res.status(401).json({ error: 'Unauthorized' });
     } catch (error) {
       console.error(error);
       return res.status(500).json({ error: 'Internal Server Error' });
