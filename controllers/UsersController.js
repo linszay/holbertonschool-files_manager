@@ -27,7 +27,7 @@ class UsersController {
       password: hashedPassword,
     });
       // return new user with only email and id
-    return res.status(201).json({ id: result.insertedId, email: newUser.email });
+    return res.status(201).json({ id: newUser.insertedId, email: newUser.email });
   }
 
   static async getMe(req, res) {
