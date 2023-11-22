@@ -7,6 +7,7 @@ const dbClient = require('../utils/db');
 class UsersController {
   static async postNew(req, res) {
     const { email, password } = req.body;
+    console.log(email, password);
     // check if email and password args are valid
     if (!email) {
       return res.status(400).json({ error: 'Missing email' });
