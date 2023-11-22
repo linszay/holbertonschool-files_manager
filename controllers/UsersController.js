@@ -1,79 +1,55 @@
-// controllers/AuthController.js
+// controllers/UsersController.js
 const sha1 = require('sha1');
-const { v4: uuidv4 } = require('uuid');
 const dbClient = require('../utils/db');
-const redisClient = require('../utils/redis');
 
-const AuthController = {
-  getConnect: async (req, res) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Basic ')) {
-      return res.status(401).json({ error: 'Unauthorized' });
+const UsersController = {
+  postNew: async (req, res) => {
+    const { email, password } = req.body;
+
+    // check if email and password args are valid
+    if (!email) {
+      return res.status(400).json({ error: 'Missing email' });
     }
-    const authCredentials = Buffer.from(authHeader.slice('Basic '.length), 'base64').toString('utf-8');
-    const [email, password] = authCredentials.split(':');
-    if (!email || !password) {
-      return res.status(401).json({ error: 'Unauthorized' });
+
+    if (!password) {
+      return res.status(400).json({ error: 'Missing password' });
     }
+
     try {
-      // check if user exists and password matches
+      // check if email already exists in db
+      const existingUser = await dbClient
+        .client
+        .db()
+        .collection('users')
+        .findOne({ email });
+
+      if (existingUser) {
+        return res.status(400).json({ error: 'Already exist' });
+      }
+
+      // hashing the password using SHA1
       const hashedPassword = sha1(password);
-      const user = await dbClient
+
+      // create new user
+      const newUser = {
+        email,
+        password: hashedPassword,
+      };
+
+      // save user to db
+      const result = await dbClient
         .client
         .db()
         .collection('users')
-        .findOne({ email, password: hashedPassword });
-      if (!user) {
-        return res.status(401).json({ error: 'Unauthorized' });
-      }
-      // generate random token
-      const token = uuidv4();
-      // create key for Redis
-      const key = `auth_${token}`;
-      // store user ID in Redis for 24 hours MAX
-      await redisClient.set(key, user._id.toString(), 86400)
-        .catch((err) => {
-          console.error(err);
-          throw new Error('Redis set error');
-        });
-      return res.status(200).json({ token });
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({ error: 'Internal Server Error' });
-    }
-  },
-  getDisconnect: async (req, res) => {
-    const { 'x-token': token } = req.headers;
-    if (!token) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
+        .insertOne(newUser);
 
-    try {
-      // retrieve user based on token from Redis
-      const userId = await redisClient.get(`auth_${token}`);
-
-      if (!userId) {
-        return res.status(401).json({ error: 'Unauthorized' });
-      }
-
-      // check if the user exists in the database
-      const user = await dbClient
-        .client
-        .db()
-        .collection('users')
-        .findOne({ _id: userId });
-      if (!user) {
-        return res.status(401).json({ error: 'Unauthorized' });
-      }
-
-      // delete the token in Redis
-      await redisClient.del(`auth_${token}`);
-
-      return res.status(204).send();
+      // return new user with only email and id
+      return res.status(201).json({ id: result.insertedId, email: newUser.email });
     } catch (error) {
       console.error(error);
       return res.status(500).json({ error: 'Internal Server Error' });
     }
   },
 };
-module.exports = AuthController;
+
+export default UsersController;
