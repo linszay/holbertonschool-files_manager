@@ -2,6 +2,7 @@
 const sha1 = require('sha1');
 const redisClient = require('../utils/redis');
 const dbClient = require('../utils/db');
+
 const UsersController = {
   postNew: async (req, res) => {
     const { email, password } = req.body;
