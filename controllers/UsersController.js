@@ -89,4 +89,4 @@ const UsersController = {
   },
 };
 
-export default UsersController;
+module.exports = UsersController;

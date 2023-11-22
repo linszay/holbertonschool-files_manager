@@ -48,4 +48,4 @@ fileQueue.process(async (job) => {
   }
 });
 
-export default fileQueue;
+module.exports = fileQueue;
