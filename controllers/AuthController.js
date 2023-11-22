@@ -44,37 +44,35 @@ const AuthController = {
   getDisconnect: async (req, res) => {
     const { 'x-token': token } = req.headers;
 
-    if (!token) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    try {
-      // retrieve user based on token from Redis
-      const userId = await redisClient.get(`auth_${token}`);
-
-      if (!userId) {
-        return res.status(401).json({ error: 'Unauthorized' });
-      }
-
-      // check if the user exists in the database
-      const user = await dbClient
-        .client
-        .db()
-        .collection('users')
-        .findOne({ _id: userId });
-
-      if (!user) {
-        return res.status(401).json({ error: 'Unauthorized' });
-      }
-
-      // delete the token in Redis
+    const user = await redisClient.get(`auth_${token}`);
+    if (user) {
       await redisClient.del(`auth_${token}`);
-
-      return res.status(204).send();
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({ error: 'Internal Server Error' });
+      return res.sendStatus(204);
     }
+    return res.status(401).json({error: 'Unauthorized' });
+    // try {
+    //   // retrieve user based on token from Redis
+    //   const userId = await redisClient.get(`auth_${token}`);
+
+    //   if (!userId) {
+    //     return res.status(401).json({ error: 'Unauthorized' });
+    //   }
+
+    //   // check if the user exists in the database
+    //   const user = await dbClient.findOne({ _id: userId });
+
+    //   if (!user) {
+    //     return res.status(401).json({ error: 'Unauthorized' });
+    //   }
+
+    //   // delete the token in Redis
+    //   await redisClient.del(`auth_${token}`);
+
+    //   return res.status(204).send();
+    // } catch (error) {
+    //   console.error(error);
+    //   return res.status(500).json({ error: 'Internal Server Error' });
+    // }
   },
 };
 
