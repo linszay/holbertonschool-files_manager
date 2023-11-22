@@ -16,11 +16,7 @@ const UsersController = {
     }
     try {
       // check if email already exists in db
-      const existingUser = await dbClient
-        .client
-        .db()
-        .collection('users')
-        .findOne({ email });
+      const existingUser = await dbClient.user.findOne({ email });
       if (existingUser) {
         return res.status(400).json({ error: 'Already exist' });
       }
@@ -32,11 +28,7 @@ const UsersController = {
         password: hashedPassword,
       };
       // save user to db
-      const result = await dbClient
-        .client
-        .db()
-        .collection('users')
-        .insertOne(newUser);
+      const result = await dbClient.user.insertOne(newUser);
       // return new user with only email and id
       return res.status(201).json({ id: result.insertedId, email: newUser.email });
     } catch (error) {
@@ -49,21 +41,27 @@ const UsersController = {
     if (!token) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
+
     try {
       // retrieve user based on token
       const userIdString = await redisClient.get(`auth_${token}`);
+
       if (!userIdString) {
         return res.status(401).json({ error: 'Unauthorized' });
       }
+
       const userId = new ObjectID(userIdString);
+
       // retrieve user details from MongoDB
       const user = await dbClient.users.findOne({ _id: userId });
+
       if (!user) {
         return res.status(401).json({ error: 'Unauthorized' });
       }
-      // if (user._id.toString() !== userId) {
-      //   return res.status(401).json({ error: 'Unauthorized' });
-      // }
+      if (user._id.toString() !== userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
       // return user object with email and id only
       return res.status(200).json({ id: user._id.toString(), email: user.email });
     } catch (error) {
@@ -72,5 +70,4 @@ const UsersController = {
     }
   },
 };
-
 module.exports = UsersController;
