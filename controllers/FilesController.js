@@ -5,11 +5,10 @@ const fs = require('fs');
 const { ObjectId } = require('mongodb');
 const Redis = require('../utils/redis');
 const dbClient = require('../utils/db');
-const RedisClient = require('../utils/redis');
 
 async function getUserIdFromToken(token) {
   try {
-    const userId = await RedisClient.get(`auth_${token}`);
+    const userId = await Redis.get(`auth_${token}`);
     return userId;
   } catch (error) {
     console.error('Error in getUserIdFromToken:', error);

@@ -1,8 +1,8 @@
 import { createWorker } from 'bull';
-import dbClient from './utils/db';
 import imageThumbnail from 'image-thumbnail';
 import path from 'path';
 import fs from 'fs/promises';
+import dbClient from './utils/db';
 
 const fileQueue = createWorker('fileQueue');
 
