@@ -16,7 +16,7 @@ class UsersController {
       return res.status(400).json({ error: 'Missing password' });
     }
     // check if email already exists in db
-    const existingUser = await dbClient.user.findOne({ email });
+    const existingUser = await dbClient.users.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ error: 'Already exist' });
     }
@@ -28,7 +28,7 @@ class UsersController {
       password: hashedPassword,
     });
       // return new user with only email and id
-    return res.status(201).json({ id: newUser.insertedId, email: newUser.email });
+    return res.status(201).json({ id: newUser.insertedId, email });
   }
 
   static async getMe(req, res) {
