@@ -1,63 +1,34 @@
-import redis from 'redis';
-import { promisify } from 'util';
+const redis = require('redis');
+const { promisify } = require('util');
 
 class RedisClient {
-  // new class to create a new client
   constructor() {
-    // creating a new client
     this.client = redis.createClient({
-      host: '127.0.0.1',
-      port: 6379,
     });
 
-    // handling errors
-    this.client.on('error', (error) => {
-      console.error(`Redis client error: ${error}`);
-    });
+    this.client.on('error', (err) => console.error(err));
+
+    this.getAsync = promisify(this.client.get).bind(this.client);
+    this.setAsync = promisify(this.client.set).bind(this.client);
+    this.delAsync = promisify(this.client.del).bind(this.client);
   }
 
   isAlive() {
-    // checking if client is connected
     return this.client.connected;
   }
 
   async get(key) {
-    // func takes a string key and returns redis value
-    const getAsync = promisify(this.client.get).bind(this.client);
-    // using promisify to take a func and return a new func
-    // the new func returns a promise asynchronously
-    try {
-      const value = await getAsync(key);
-      return JSON.parse(value);
-    } catch (error) {
-      console.error(`Error getting value from Redis: ${error}`);
-      return null;
-    }
+    return this.getAsync(key);
   }
 
   async set(key, value, duration) {
-    try {
-      const setAsync = promisify(this.client.set).bind(this.client);
-      // using promisify again for the same reason but for set
-      await setAsync(key, String(value), 'EX', duration);
-      // await the promise to return/set the value
-    } catch (error) {
-      console.error(`Error setting value in Redis: ${error}`);
-    }
+    return this.setAsync(key, value, 'EX', duration);
   }
 
   async del(key) {
-    try {
-      const delAsync = promisify(this.client.del).bind(this.client);
-      // same use with promisify again but for del
-      await delAsync(key);
-      // await the promise to return/del the value
-    } catch (error) {
-      console.error(`Error deleting value from Redis: ${error}`);
-    }
+    return this.delAsync(key);
   }
 }
 
 const redisClient = new RedisClient();
-
 module.exports = redisClient;
