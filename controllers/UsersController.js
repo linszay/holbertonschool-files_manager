@@ -23,10 +23,10 @@ class UsersController {
       // hashing the password using SHA1
       const hashedPassword = sha1(password);
       // create new user
-      const newUser = {
+      const newUser = await dbClient.users.insertOne({
         email,
         password: hashedPassword,
-      };
+      });
       // save user to db
       const result = await dbClient.user.insertOne(newUser);
       // return new user with only email and id
