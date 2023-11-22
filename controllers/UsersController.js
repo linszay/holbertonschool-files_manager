@@ -76,12 +76,12 @@ const UsersController = {
         return res.status(401).json({ error: 'Unauthorized' });
       }
 
-      // if (user._id.toString() !== userId) {
-      //   return res.status(401).json({ error: 'Unauthorized' });
-      // }
+      if (user._id.toString() !== userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
 
       // return user object with email and id only
-      return res.status(200).json({ id: user._id.toString(), email: user.email });
+      return res.status(200).json({ id: user._id.toString, email: user.email });
     } catch (error) {
       console.error(error);
       return res.status(500).json({ error: 'Internal Server Error' });
@@ -89,4 +89,4 @@ const UsersController = {
   },
 };
 
-module.exports = UsersController;
+export default UsersController;
