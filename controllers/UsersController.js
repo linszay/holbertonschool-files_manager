@@ -6,12 +6,10 @@ const dbClient = require('../utils/db');
 const UsersController = {
   postNew: async (req, res) => {
     const { email, password } = req.body;
-
     // check if email and password args are valid
     if (!email) {
       return res.status(400).json({ error: 'Missing email' });
     }
-
     if (!password) {
       return res.status(400).json({ error: 'Missing password' });
     }
@@ -23,7 +21,6 @@ const UsersController = {
         .db()
         .collection('users')
         .findOne({ email });
-
       if (existingUser) {
         return res.status(400).json({ error: 'Already exist' });
       }
@@ -86,4 +83,4 @@ const UsersController = {
   },
 };
 
-export default UsersController;
+module.exports = UsersController;
