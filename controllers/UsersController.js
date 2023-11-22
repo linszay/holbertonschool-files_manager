@@ -14,27 +14,20 @@ class UsersController {
     if (!password) {
       return res.status(400).json({ error: 'Missing password' });
     }
-    try {
-      // check if email already exists in db
-      const existingUser = await dbClient.user.findOne({ email });
-      if (existingUser) {
-        return res.status(400).json({ error: 'Already exist' });
-      }
-      // hashing the password using SHA1
-      const hashedPassword = sha1(password);
-      // create new user
-      const newUser = await dbClient.users.insertOne({
-        email,
-        password: hashedPassword,
-      });
-      // save user to db
-      const result = await dbClient.user.insertOne(newUser);
-      // return new user with only email and id
-      return res.status(201).json({ id: result.insertedId, email: newUser.email });
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({ error: 'Internal Server Error' });
+    // check if email already exists in db
+    const existingUser = await dbClient.user.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: 'Already exist' });
     }
+    // hashing the password using SHA1
+    const hashedPassword = sha1(password);
+    // create new user
+    const newUser = await dbClient.users.insertOne({
+      email,
+      password: hashedPassword,
+    });
+      // return new user with only email and id
+    return res.status(201).json({ id: result.insertedId, email: newUser.email });
   }
 
   static async getMe(req, res) {
