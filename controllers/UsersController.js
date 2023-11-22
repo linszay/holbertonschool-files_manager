@@ -4,8 +4,8 @@ const { ObjectID } = require('mongodb');
 const redisClient = require('../utils/redis');
 const dbClient = require('../utils/db');
 
-const UsersController = {
-  postNew: async (req, res) => {
+class UsersController {
+  static async postNew(req, res) {
     const { email, password } = req.body;
     // check if email and password args are valid
     if (!email) {
@@ -35,8 +35,9 @@ const UsersController = {
       console.error(error);
       return res.status(500).json({ error: 'Internal Server Error' });
     }
-  },
-  getMe: async (req, res) => {
+  }
+
+  static async getMe(req, res) {
     const { 'x-token': token } = req.headers;
     if (!token) {
       return res.status(401).json({ error: 'Unauthorized' });
@@ -68,6 +69,6 @@ const UsersController = {
       console.error(error);
       return res.status(500).json({ error: 'Internal Server Error' });
     }
-  },
-};
+  }
+}
 module.exports = UsersController;
